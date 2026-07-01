@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""komainu — clone/install guardian CLI.
+
+Usage:
+  komainu import <https-url> [--dest DIR] [--staging DIR] [--json] [--keep-junk]
+  komainu scan  <path> [--no-sterilize] [--json]
+  komainu selfcheck
+  komainu install-shims [--dir DIR]
+  komainu gate  --tool Bash --command "<cmd>"     # used by the PreToolUse hook
+
+Exit codes:  0 SAFE/ok · 10 REVIEW · 20 DANGER · 2 usage/error
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+sys.path.insert(0, str(ROOT))
+
+from core import engine                       # noqa: E402
+from core.verdict import SAFE, REVIEW, DANGER  # noqa: E402
+from core.report import to_markdown            # noqa: E402
+from core.gate import classify_command         # noqa: E402
+
+_EXIT = {SAFE: 0, REVIEW: 10, DANGER: 20}
+
+
+def _default_staging() -> Path:
+    base = os.environ.get("KOMAINU_STAGING")
+    if base:
+        return Path(base)
+    # workspace/komainu under AKATSUKI if present, else a temp-ish local dir
+    for cand in (Path.cwd() / "workspace" / "komainu",
+                 Path.home() / ".komainu" / "staging"):
+        return cand
+    return Path.cwd() / ".komainu"
+
+
+def cmd_import(a) -> int:
+    staging = Path(a.staging) if a.staging else _default_staging()
+    payload = engine.import_url(a.url, staging, ref=a.ref, keep_junk=a.keep_junk,
+                                target_dir=Path(a.dest) if a.dest else None)
+    if a.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        print(to_markdown(payload))
+        print(f"\n[report] {payload['report_md']}")
+        act = payload["activation"]
+        print(f"[gate] {payload['verdict']} — {act['reason']}")
+    return _EXIT.get(payload["verdict"], 2)
+
+
+def cmd_scan(a) -> int:
+    root = Path(a.path)
+    if not root.exists():
+        print(f"no such path: {root}", file=sys.stderr)
+        return 2
+    payload = engine.vet_path(root, do_sterilize=not a.no_sterilize, source=str(root))
+    if a.json:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        print(to_markdown(payload))
+    return _EXIT.get(payload["verdict"], 2)
+
+
+def cmd_selfcheck(a) -> int:
+    from core.util import platform_info, which
+    info = platform_info()
+    print("komainu selfcheck")
+    print(f"  platform : {info['system']} py{info['python']}")
+    print(f"  git      : {which('git') or 'MISSING (required)'}")
+    print(f"  rg       : {which('rg') or 'absent (pure-python fallback used)'}")
+    print(f"  staging  : {_default_staging()}")
+    return 0 if which("git") else 2
+
+
+def cmd_install_shims(a) -> int:
+    src = ROOT / "shims"
+    dst = Path(a.dir) if a.dir else (Path.home() / ".komainu" / "bin")
+    dst.mkdir(parents=True, exist_ok=True)
+    import shutil
+    copied = []
+    for name in ("git", "gh", "npm", "pnpm", "yarn", "bun", "pip", "pip3", "npx"):
+        s = src / name
+        if s.exists():
+            d = dst / name
+            shutil.copy2(str(s), str(d))
+            os.chmod(d, 0o755)
+            copied.append(name)
+    print(f"installed shims to {dst}: {', '.join(copied)}")
+    print(f"add to PATH FRONT:  export PATH=\"{dst}:$PATH\"")
+    return 0
+
+
+def cmd_gate(a) -> int:
+    """Called by the PreToolUse hook. Prints a decision line; exit 20 = block."""
+    verdict = classify_command(a.command or "")
+    if verdict == "block":
+        print("BLOCK: raw clone/install detected — route via `komainu import <url>`",
+              file=sys.stderr)
+        return 20
+    print("allow")
+    return 0
+
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(prog="komainu")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    pi = sub.add_parser("import"); pi.add_argument("url")
+    pi.add_argument("--dest"); pi.add_argument("--staging"); pi.add_argument("--ref")
+    pi.add_argument("--json", action="store_true"); pi.add_argument("--keep-junk", action="store_true")
+    pi.set_defaults(fn=cmd_import)
+
+    ps = sub.add_parser("scan"); ps.add_argument("path")
+    ps.add_argument("--no-sterilize", action="store_true"); ps.add_argument("--json", action="store_true")
+    ps.set_defaults(fn=cmd_scan)
+
+    sub.add_parser("selfcheck").set_defaults(fn=cmd_selfcheck)
+
+    psh = sub.add_parser("install-shims"); psh.add_argument("--dir"); psh.set_defaults(fn=cmd_install_shims)
+
+    pg = sub.add_parser("gate"); pg.add_argument("--tool"); pg.add_argument("--command")
+    pg.set_defaults(fn=cmd_gate)
+
+    a = p.parse_args(argv)
+    return a.fn(a)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
