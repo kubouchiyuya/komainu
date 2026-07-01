@@ -1,0 +1,8 @@
+{
+  "name": "komainu",
+  "version": "0.1.0",
+  "description": "狛犬 — clone/install guardian for AI agents. Anonymous clone, full scan (injection/exfil/auto-run/guardrail-tamper), quarantine, verdict gate, sandboxed install. Never executes imported code.",
+  "author": { "name": "AKATSUKI / MASA" },
+  "license": "MIT",
+  "keywords": ["security", "guardian", "clone", "install", "prompt-injection", "supply-chain"]
+}

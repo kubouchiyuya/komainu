@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+workspace/
+.komainu/
+_QUARANTINE/
+.claude/

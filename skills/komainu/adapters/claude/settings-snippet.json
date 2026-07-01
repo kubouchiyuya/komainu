@@ -1,0 +1,17 @@
+{
+  "_comment": "Merge this PreToolUse entry into .claude/settings.json to activate Komainu auto-fire on Claude Code. Reversible: delete the entry to deactivate.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR}/.claude/skills/komainu/adapters/claude/hook.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

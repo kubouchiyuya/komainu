@@ -1,0 +1,15 @@
+{
+  "name": "komainu",
+  "owner": { "name": "AKATSUKI / MASA" },
+  "metadata": {
+    "description": "狛犬 / Komainu — clone/install guardian for AI agents.",
+    "note": "Distribution scaffolding. To publish standalone: extract this skill to its own repo as skills/komainu/ with this .claude-plugin/ at the repo root, then `claude plugin marketplace add <owner>/komainu`."
+  },
+  "plugins": [
+    {
+      "name": "komainu",
+      "source": "./",
+      "description": "Anonymous clone → scan → sterilize → verdict → sandboxed install. Auto-fires via PATH shim + PreToolUse hook across all AIs and OSes."
+    }
+  ]
+}
