@@ -79,6 +79,15 @@ Verdict: **SAFE** (exit 0) · **REVIEW** (10) · **DANGER** (20).
 - If a repo's *primary purpose* is malicious, removing it would remove the
   feature — Komainu refuses the import (DANGER) rather than pretend-cleaning it.
 
+## Documentation
+
+- [docs/index.md](skills/komainu/docs/index.md) — introduction & overview
+- [docs/quickstart.md](skills/komainu/docs/quickstart.md) — install and first vetted import
+- [docs/how-it-works.md](skills/komainu/docs/how-it-works.md) — 10-phase lifecycle, 5 categories, enforcement
+- [docs/faq.md](skills/komainu/docs/faq.md) — star≠install, SAFE≠safe-to-run, bypass, all AIs/OSes
+- [references/threat-model.md](skills/komainu/references/threat-model.md) — full threat taxonomy
+- 日本語: [docs/index.ja.md](skills/komainu/docs/index.ja.md)
+
 ## License
 
 MIT. When Komainu imports third-party code it preserves the source LICENSE and
