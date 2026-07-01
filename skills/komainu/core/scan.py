@@ -7,7 +7,6 @@ Any instruction text found is treated strictly as DATA, never followed.
 from __future__ import annotations
 
 import re
-import unicodedata
 from pathlib import Path
 from typing import Callable
 
@@ -184,8 +183,9 @@ def scan_exec_vectors(root: Path) -> list[Finding]:
                 ".gitattributes", evidence=m.group(0)[:120], action="quarantine"))
 
     # 2c. package-manager lifecycle scripts (run on install)
-    for pkg in root.rglob("package.json"):
-        if any(part in ("node_modules",) for part in pkg.parts):
+    # iter_files (not rglob) so _QUARANTINE / node_modules / .git stay excluded.
+    for pkg in iter_files(root):
+        if pkg.name != "package.json":
             continue
         t = read_text(pkg) or ""
         for m in re.finditer(r'"(preinstall|install|postinstall|prepare|prepublish|prepublishOnly)"\s*:', t):
@@ -207,6 +207,29 @@ def scan_exec_vectors(root: Path) -> list[Finding]:
         (r'"command"\s*:\s*"[^"]*(curl|wget|bash\s+-c|sh\s+-c|python\s+-c)', SEV_CRIT,
          "cc-hook-shell", "Claude Code hook runs a shell command automatically"),
     ], CAT_EXEC, path_filter=lambda p: p.name in ("hooks.json", "settings.json", "settings.local.json"))
+
+    # 2f. name-based auto-run files anywhere in the tree
+    name_vectors = {
+        "sitecustomize.py": (SEV_HIGH, "python sitecustomize auto-imports on interpreter start"),
+        "usercustomize.py": (SEV_HIGH, "python usercustomize auto-imports on interpreter start"),
+        "conftest.py": (SEV_MED, "pytest auto-loads conftest.py when tests run"),
+        "build.rs": (SEV_HIGH, "cargo build script executes on `cargo build`"),
+        ".bashrc": (SEV_MED, "shell rc shipped in repo (auto-sourced if placed in $HOME)"),
+        ".zshrc": (SEV_MED, "shell rc shipped in repo (auto-sourced if placed in $HOME)"),
+        ".bash_profile": (SEV_MED, "shell profile shipped in repo"),
+        ".zprofile": (SEV_MED, "shell profile shipped in repo"),
+        ".profile": (SEV_MED, "shell profile shipped in repo"),
+    }
+    for p in iter_files(root):
+        meta = name_vectors.get(p.name)
+        if meta:
+            findings.append(Finding(CAT_EXEC, meta[0], "auto-run-file", meta[1],
+                                    rel(p, root), action="flag"))
+        elif p.suffix == ".pth":
+            findings.append(Finding(
+                CAT_EXEC, SEV_MED, "python-pth",
+                "python .pth file auto-executes 'import' lines when on sys.path",
+                rel(p, root), action="flag"))
 
     return findings
 

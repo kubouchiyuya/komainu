@@ -73,14 +73,16 @@ def clone(url: str, dest: Path, ref: str | None = None, keep_junk: bool = False)
     head = _git(["rev-parse", "HEAD"], cwd=dest)
     sha = head.stdout.strip() if head.returncode == 0 else ""
 
-    # 3. neutralize any .gitattributes filters BEFORE checkout
-    ga = dest / ".gitattributes"
+    # 3. detect .gitattributes filter drivers BEFORE checkout. After --no-checkout
+    #    the working tree is empty, so read the blob via `git show` (not the disk).
+    #    Undefined filter drivers cannot execute without a matching git config
+    #    entry (config is never fetched by clone) and lfs smudge/process are
+    #    disabled in safe_cfg; the checked-out .gitattributes is additionally
+    #    quarantined by the scanner (scan_exec_vectors 2b).
     ga_had_filters = False
-    if ga.exists():
-        content = ga.read_text("utf-8", "replace")
-        if re.search(r"(filter|clean|smudge|process)\s*=", content):
-            ga_had_filters = True
-            ga.write_text("# [komainu] filters neutralized before checkout\n", "utf-8")
+    show = _git(["show", "HEAD:.gitattributes"], cwd=dest)
+    if show.returncode == 0 and re.search(r"(filter|clean|smudge|process)\s*=", show.stdout):
+        ga_had_filters = True
 
     # 4. checkout with filters disabled
     co = _git(safe_cfg + ["checkout", "HEAD", "--", "."], cwd=dest)
@@ -105,5 +107,5 @@ def clone(url: str, dest: Path, ref: str | None = None, keep_junk: bool = False)
                     pass
 
     return {"url": url, "sha": sha, "dest": str(dest),
-            "gitattributes_filters_neutralized": ga_had_filters,
+            "gitattributes_filters_detected": ga_had_filters,
             "junk_dropped": dropped}
