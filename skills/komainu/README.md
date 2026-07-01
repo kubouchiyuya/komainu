@@ -70,7 +70,9 @@ Verdict: **SAFE** (exit 0) · **REVIEW** (10) · **DANGER** (20).
 
 - Static scanning catches known patterns; obfuscated/unknown payloads may slip.
   The real containment is that **Komainu never executes cloned code** and
-  **neutralizes auto-run vectors at clone time** — if nothing runs, nothing hurts.
+  **disables auto-run wiring at clone time** (git hooks, submodules, LFS/filters)
+  while install/lifecycle scripts only ever run sandboxed in P6 — if nothing
+  runs, nothing hurts.
 - **SAFE ≠ safe to execute arbitrarily.** It means "no static threat + nothing
   auto-runs." Running imported code still uses the sandboxed, `--ignore-scripts`,
   no-network path with least privilege.

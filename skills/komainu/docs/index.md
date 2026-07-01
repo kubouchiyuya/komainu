@@ -1,7 +1,7 @@
 # 狛犬 / Komainu — Documentation
 
 > A clone / install guardian for AI agents.
-> 日本語版: [index.ja.md](index.ja.md)
+> Repository: https://github.com/kubouchiyuya/komainu · 日本語版: [index.ja.md](index.ja.md)
 
 Komainu are the paired lion-dogs that guard a shrine gate, warding off evil
 before it enters. This tool does the same for your machine: every third-party

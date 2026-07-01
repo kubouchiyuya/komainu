@@ -1,7 +1,7 @@
 # 狛犬 / Komainu — ドキュメント
 
 > AI エージェントのための clone / install ガーディアン。
-> English: [index.md](index.md)
+> リポジトリ: https://github.com/kubouchiyuya/komainu · English: [index.md](index.md)
 
 狛犬は社の門で邪気を祓う一対の守護獣。このツールは同じことを PC の入口でやる。
 外から入る**リポジトリ・スキル・プラグイン**を、AI が読む前・実行する前に門で
