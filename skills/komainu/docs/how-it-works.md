@@ -25,7 +25,10 @@ execution only ever happens in the sandboxed, human-gated install (P6).
    `display:none`, and payloads buried in agent-instruction files.
 2. **Auto-run vectors** — `.gitattributes` filter drivers, submodules, git
    hooks, npm/pip lifecycle scripts, Claude Code Pre/PostToolUse hooks,
-   `.vscode/tasks.json` (`runOn: folderOpen`), `.devcontainer`, `.envrc`.
+   `.vscode/tasks.json` (`runOn: folderOpen`), `.devcontainer`, `.envrc`,
+   `sitecustomize.py` / `usercustomize.py` / `*.pth` (Python auto-import),
+   `conftest.py` (pytest), `build.rs` (Cargo), and shell rc files
+   (`.bashrc` / `.zshrc` / `.profile`).
 3. **Exfiltration** — `curl … | sh`, files that read secrets *and* have network
    egress, outbound POST/PUT.
 4. **Malware / obfuscation** — dynamic `eval`/`exec`, base64 payloads, opaque
@@ -47,6 +50,28 @@ The engine is a single pure-Python implementation, so the **verdict is
 identical** wherever it runs — the enforcement layer differs per host, the
 judgment does not.
 
+## Handling a verdict
+
+| Verdict | What to do |
+|---|---|
+| **SAFE** | Activate it. Still install dependencies via the sandboxed path (P6, `--ignore-scripts`, no network) and run with least privilege. |
+| **REVIEW** | Open `komainu-report.md`, read the medium findings, then re-run with them acknowledged. The clean tree is usable; the flagged files were kept (not quarantined) because removing them could break the skill. |
+| **DANGER** | Import is refused. Inspect `_QUARANTINE/MANIFEST.json` for what was pulled and why. Only override with a deliberate, audited `KOMAINU_BYPASS=1` if you fully trust the source. |
+
+**Restoring a quarantined file** — nothing is deleted. Everything under
+`_QUARANTINE/` keeps its original path; move a file back if you have reviewed it
+and decided it is safe. Sanitized originals are kept under
+`_QUARANTINE/originals/` for diffing.
+
+## Configuration (environment variables)
+
+| Variable | Effect |
+|---|---|
+| `KOMAINU_BYPASS=1` | Skip the gate for one command. **Audited** — every bypass is logged. |
+| `KOMAINU_AUDIT=<path>` | Where the block/bypass audit log is written (default `~/.komainu/audit.log`). |
+| `KOMAINU_STAGING=<dir>` | Where clones are staged and reports are written (default `workspace/komainu` or `~/.komainu/staging`). |
+| `--star` (flag on `import`) | Star the source repo after a SAFE import. Default off — vetting stays anonymous. |
+
 ## Why it can claim "nearly everything" — honestly
 
 Static scanning catches *known* patterns; obfuscated or novel payloads can slip
@@ -54,8 +79,9 @@ past any scanner. Komainu's real containment is structural:
 
 1. **It never executes imported code.** A missed pattern that never runs does no
    harm.
-2. **It disarms auto-run vectors at clone time** (P2) — hooks, filters,
-   submodules, lifecycle scripts.
+2. **It disarms auto-run at clone time** (P2) — git hooks off, no submodule
+   recursion, LFS/filters off, and it never runs install/lifecycle scripts
+   (those only ever run sandboxed in P6 with `--ignore-scripts`).
 3. **It quarantines, not deletes** — recoverable, auditable.
 
 So the near-zero-damage guarantee comes from (1)(2)(3); the scanners are the

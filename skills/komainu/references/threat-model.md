@@ -28,13 +28,17 @@ AI エージェントは repo の中身（SKILL.md / README / コメント / デ
 
 | 脅威 | なぜ | 検出 (`scan_exec_vectors`) |
 |---|---|---|
-| `.gitattributes` filter/clean/smudge/process | checkout 時にコマンド実行(RCE) | driver 検出→隔離。**clone時に先行無効化** |
+| `.gitattributes` filter/clean/smudge/process | checkout 時にコマンド実行(RCE) | driver 検出→隔離。clone時は working tree が空なので `git show HEAD:` で**先行検出**（未定義 filter は config 不在で不発、lfs は無効化済） |
 | `.gitmodules` submodule | `--recurse` で外部コード取得 | 存在検出。Komainu は非再帰 clone |
 | git hooks / `.githooks` / core.hooksPath | git 操作でスクリプト実行 | 存在検出→隔離。clone時 hooksPath=/dev/null |
 | npm lifecycle (pre/post install, prepare) | `npm install` で任意実行 | package.json 解析→flag。install は `--ignore-scripts` |
 | setup.py / Makefile | build/install 時実行 | パターン検出 |
 | **Claude Code hooks** (Pre/PostToolUse) | エージェントの tool 使用で自動発火 | hooks.json/settings.json 解析→shell 付きは CRITICAL |
 | `.vscode/tasks.json`(runOn folderOpen) / `.devcontainer` / `.envrc` | エディタ/cd で自動実行 | 存在検出→隔離 |
+| `sitecustomize.py`/`usercustomize.py`/`*.pth` | Python インタプリタ起動時に自動 import/実行 | 名前・拡張子検出→flag |
+| `conftest.py` | pytest 実行時に自動ロード | 名前検出→flag |
+| `build.rs` | `cargo build` で実行 | 名前検出→flag |
+| shell rc (`.bashrc`/`.zshrc`/`.profile` 等) | `$HOME` に置かれると自動 source | 名前検出→flag |
 
 **残余リスク**: 新種の自動実行フック。→ 構造対処（P2で hook/filter/submodule を無効化、
 lifecycle 非実行）が個別検出漏れを補う。
