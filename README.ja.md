@@ -4,7 +4,7 @@
 
 ### あなたの AI が触れる前に、すべての repo・skill・plugin を門で検める守護獣。
 
-匿名 clone → 徹底スキャン → 危険を無害化 → クリーンなコピーを返す。
+installする際 → まず徹底スキャン → 危険を無害化 → クリーンなインストールを実施する。
 **検査対象のコードは、一切実行しない。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
