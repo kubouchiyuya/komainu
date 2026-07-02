@@ -4,7 +4,7 @@
 
 ### The guardian that inspects every repo, skill, and plugin **before your AI touches it.**
 
-Anonymous clone → deep scan → neutralize the danger → hand back a clean copy.
+ Install → deep scan → neutralize the danger → hand back a install.
 **It never runs the code it is checking.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
