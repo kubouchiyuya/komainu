@@ -66,7 +66,7 @@ python3 .claude/skills/komainu/bin/komainu selfcheck
    clone/install を hook が deny。`settings-snippet.json` を
    `.claude/settings.json` にマージして有効化（可逆・削除で無効化）。
 
-他エージェント: `adapters/{codex,cursor,gemini}/` の routing スニペットを
+他エージェント: `adapters/{codex,grok,cursor,gemini}/` の routing スニペットを
 各設定（AGENTS.md / .cursorrules / GEMINI.md）へ貼ると規律ベースで誘導。
 
 ## 10 フェーズ・ライフサイクル

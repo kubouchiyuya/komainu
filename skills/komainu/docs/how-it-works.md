@@ -42,9 +42,9 @@ Full taxonomy and residual-risk analysis: [../references/threat-model.md](../ref
 
 | Layer | Covers | Guarantee |
 |---|---|---|
-| **PATH shim** (`shims/`) | any agent that shells out — Claude Code, Codex, Cursor, Aider, Gemini CLI, humans — on macOS/Linux (PowerShell on Windows) | strong / deterministic |
+| **PATH shim** (`shims/`) | any agent that shells out — Claude Code, OpenAI Codex, Grok, Cursor, Aider, Gemini CLI, humans — on macOS/Linux (PowerShell on Windows) | strong / deterministic |
 | **Claude Code hook** (`adapters/claude/`) | Bash-tool clones inside Claude Code | strong / deterministic |
-| **Routing snippets** (`adapters/{codex,cursor,gemini}/`) | agents configured via AGENTS.md / .cursorrules / GEMINI.md | advisory |
+| **Routing snippets** (`adapters/{codex,grok,cursor,gemini}/`) | agents configured via AGENTS.md / .cursorrules / GEMINI.md | advisory |
 
 The engine is a single pure-Python implementation, so the **verdict is
 identical** wherever it runs — the enforcement layer differs per host, the

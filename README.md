@@ -10,7 +10,7 @@ Anonymous clone → deep scan → neutralize the danger → hand back a clean co
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![Pure Python](https://img.shields.io/badge/engine-pure%20python%20(stdlib)-black.svg)](#zero-dependencies)
 [![Cross platform](https://img.shields.io/badge/mac%20%7C%20linux%20%7C%20windows-black.svg)](#for-every-ai-every-os)
-[![Every agent](https://img.shields.io/badge/Claude%20%7C%20Codex%20%7C%20Cursor%20%7C%20Gemini-black.svg)](#for-every-ai-every-os)
+[![Every agent](https://img.shields.io/badge/Claude%20%7C%20OpenAI%20%7C%20Grok%20%7C%20Gemini%20%7C%20Cursor-black.svg)](#for-every-ai-every-os)
 
 日本語版は [README.ja.md](README.ja.md)
 
@@ -287,9 +287,9 @@ Komainu enforces itself at **two layers**, so if one is bypassed the other holds
 
 | Layer | Covers | Strength |
 |---|---|---|
-| **PATH shim** | *Any* agent that shells out — Claude Code, Codex, Cursor, Aider, Gemini CLI, or a human — on macOS/Linux (PowerShell on Windows) | strong / deterministic |
+| **PATH shim** | *Any* agent that shells out — Claude Code, OpenAI Codex, Grok, Cursor, Aider, Gemini CLI, or a human — on macOS/Linux (PowerShell on Windows) | strong / deterministic |
 | **Claude Code hook** | Bash-tool clones inside Claude Code | strong / deterministic |
-| **Routing snippets** | Codex / Cursor / Gemini via their config files | advisory |
+| **Routing snippets** | OpenAI Codex / Grok / Cursor / Gemini via their config files | advisory |
 
 The scanning engine is a **single pure-Python implementation**, so the verdict is
 **identical on every OS and under every agent** — only the enforcement layer
@@ -340,8 +340,9 @@ the real work, and your AI can run both for you.
 **Do I need to be an engineer?** No. You run one command and read one word:
 SAFE, REVIEW, or DANGER.
 
-**Does it work with Codex / Cursor / Gemini, not just Claude?** Yes — the PATH
-shim covers any agent that uses a shell, and there are routing snippets for each.
+**Does it work with OpenAI, Grok, Cursor, Gemini — not just Claude?** Yes — the
+PATH shim covers any agent that uses a shell (OpenAI Codex, Grok, Cursor, Aider,
+Gemini CLI…), and there are routing snippets for each.
 
 **Windows?** Yes — the engine is cross-platform and ships PowerShell shims.
 
