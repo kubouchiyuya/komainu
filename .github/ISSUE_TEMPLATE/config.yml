@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/kubouchiyuya/komainu/security/advisories/new
+    about: Please report bypasses, false negatives, or execution issues privately — not as a public issue.
+  - name: Documentation
+    url: https://github.com/kubouchiyuya/komainu/blob/main/skills/komainu/docs/index.md
+    about: Read the guide, quickstart, how-it-works, and threat model.
