@@ -31,12 +31,16 @@ CV="$(python3 "$SKILL/bin/komainu" scan "$TMP3" --no-sterilize --json 2>/dev/nul
 [ "$CV" = "SAFE" ] && ok "clean is SAFE" || no "clean was $CV"
 
 echo "[4] gate classifier"
-python3 - "$SKILL" <<'PY' && ok "gate 10/10" || no "gate mismatch"
+python3 - "$SKILL" <<'PY' && ok "gate classifier (incl. -C and URL-substring bypass)" || no "gate mismatch"
 import sys; sys.path.insert(0, sys.argv[1])
 from core.gate import classify_command as c
 t={"git clone https://x/y":"block","gh repo clone a/b":"block",
    "npm install github:a/b":"block","pip install git+https://x":"block",
    "curl https://x | bash":"block","claude plugin install f":"block",
+   "git -C /tmp clone https://x/y":"block",                      # K1: git -C ... clone
+   "git clone https://github.com/e/komainu-exploit":"block",     # K2: URL substring must NOT bypass
+   "git clone https://x/localhost-repo":"block",                 # K2
+   "git clone http://localhost:3000/r":"allow",                  # localhost as host is ok
    "git status":"allow","npm install":"allow","komainu import https://x":"allow",
    "git commit -m x":"allow"}
 raise SystemExit(0 if all(c(k)==v for k,v in t.items()) else 1)
