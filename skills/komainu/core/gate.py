@@ -18,7 +18,7 @@ import re
 
 # raw acquisition of external code
 _BLOCK_PATTERNS = [
-    r"\bgit\s+clone\b",
+    r"\bgit\s+(?:-C\s+\S+\s+|--git-dir=\S+\s+)*clone\b",  # also `git -C <path> clone`
     r"\bgh\s+repo\s+clone\b",
     r"\bgit\s+submodule\s+(add|update\s+--init)",
     r"\bnpx\s+degit\b",
@@ -34,9 +34,12 @@ _BLOCK_PATTERNS = [
 ]
 _BLOCK_RE = re.compile("|".join(_BLOCK_PATTERNS), re.IGNORECASE)
 
-# allow-list: our own wrapper, localhost, and explicit bypass
+# allow-list: an explicit per-command opt-out, and localhost ONLY as the host
+# (matching a bare "komainu"/"localhost" substring anywhere let a hostile URL
+# like .../komainu-exploit or .../localhost-repo bypass the gate). Komainu's own
+# git calls are allowed via the KOMAINU_BYPASS env, not by string-matching.
 _ALLOW_RE = re.compile(
-    r"\bkomainu\b|localhost|127\.0\.0\.1|--komainu-ok\b",
+    r"--komainu-ok\b|://(?:localhost|127\.0\.0\.1)[:/]",
     re.IGNORECASE)
 
 
