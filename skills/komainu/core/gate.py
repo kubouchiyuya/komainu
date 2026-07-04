@@ -43,15 +43,31 @@ _ALLOW_RE = re.compile(
     re.IGNORECASE)
 
 
+# leading `KOMAINU_BYPASS=1` (optionally among other env assignments) — the
+# documented one-time escape, honored even via the Claude hook where an inline
+# env prefix would not reach os.environ.
+_ENV_BYPASS_RE = re.compile(r"^\s*(?:\w+=\S*\s+)*KOMAINU_BYPASS=1(?:\s|$)")
+
+
+def _blank_quoted(cmd: str) -> str:
+    """Blank the CONTENTS of quoted strings so a trigger word that appears only
+    inside an argument (a release note, commit message, echo) does not
+    false-positive the operator's own shell. A real clone/install keeps its
+    command+subcommand outside quotes, so it is still detected."""
+    cmd = re.sub(r'"(?:[^"\\]|\\.)*"', '""', cmd)
+    cmd = re.sub(r"'[^']*'", "''", cmd)
+    return cmd
+
+
 def classify_command(command: str) -> str:
     """Return 'block' or 'allow'."""
     if not command:
         return "allow"
-    if os.environ.get("KOMAINU_BYPASS") == "1":
+    if os.environ.get("KOMAINU_BYPASS") == "1" or _ENV_BYPASS_RE.match(command):
         return "allow"  # audited elsewhere
     if _ALLOW_RE.search(command):
         return "allow"
-    if _BLOCK_RE.search(command):
+    if _BLOCK_RE.search(_blank_quoted(command)):
         return "block"
     return "allow"
 

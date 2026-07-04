@@ -1,6 +1,6 @@
 ---
 name: komainu
-version: 0.2.0
+version: 0.2.1
 description: |
   狛犬 / Komainu — clone/install ガーディアン。第三者のリポジトリ・スキル・
   プラグインを取り込む前に「read-only clone → 完全網羅スキャン → 無害化 → 判定ゲート →
