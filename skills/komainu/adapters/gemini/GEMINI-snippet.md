@@ -6,6 +6,6 @@ All external code acquisition (`git clone`, `gh repo clone`, install-from-git,
 
     komainu import <https-url>
 
-It clones anonymously, scans (prompt-injection / exfiltration / auto-run /
+It clones read-only, scans (prompt-injection / exfiltration / auto-run /
 guardrail-tamper), quarantines danger, and yields a vetted copy. The komainu
 PATH shim enforces this for any shelled command; audited bypass: `KOMAINU_BYPASS=1`.

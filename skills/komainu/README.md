@@ -4,7 +4,7 @@
 
 ### The guardian that inspects every repo, skill, and plugin **before your AI touches it.**
 
-Anonymous clone → deep scan → neutralize the danger → hand back a clean copy.
+Read-only clone → deep scan → neutralize the danger → hand back a clean copy.
 **It never runs the code it is checking.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
@@ -32,7 +32,7 @@ That code can:
 - **rewrite the very rules** that were supposed to protect you.
 
 Komainu is the gate they all have to pass through first. It clones the code
-**anonymously**, reads every file looking for those four dangers plus more,
+**read-only**, reads every file looking for those four dangers plus more,
 **moves anything dangerous into quarantine** (it never deletes), and hands you a
 clean, working copy — or refuses it outright. And it does all this **without ever
 executing a single line** of the code it is inspecting.
@@ -180,7 +180,7 @@ permission rules, hooks, or its own code. This is **critical → refused.**
              │                                 │
              ▼                                 │
       ┌──────────────┐                         │
-      │   狛犬 gate   │   1. clone anonymously  │
+      │   狛犬 gate   │   1. clone read-only  │
       │              │   2. read every file    │
       │  (never runs │   3. quarantine danger  │
       │   the code)  │   4. verdict            │
@@ -213,7 +213,7 @@ Every import runs the same 10 phases. Phases 2–5 touch **no** running code.
 | Phase | What happens |
 |---|---|
 | **1 · Intercept** | A PATH shim / Claude hook catches a raw clone or install and routes it here. |
-| **2 · Clone** | Anonymous HTTPS. `--no-checkout` so `.gitattributes`/`.gitmodules` are inspected *first*; checkout with filters & hooks disabled; drop `.git`; drop junk; pin the exact commit. |
+| **2 · Clone** | Read-only HTTPS. `--no-checkout` so `.gitattributes`/`.gitmodules` are inspected *first*; checkout with filters & hooks disabled; drop `.git`; drop junk; pin the exact commit. |
 | **3 · Scan** | All 5 threat categories. |
 | **4 · Sterilize** | Move dangerous files to `_QUARANTINE/`, strip hidden unicode, report broken references. |
 | **5 · Verdict** | SAFE / REVIEW / DANGER. |
@@ -305,7 +305,7 @@ differs, never the judgment.
   `_QUARANTINE/` with a manifest. You can always inspect or restore.
 - **It treats found instructions as data, never follows them** — a scanner that
   reads injection attempts must not be injectable itself.
-- **It is fully open and testable.** Run `sh tests/smoke.sh` — 10 offline
+- **It is fully open and testable.** Run `sh tests/smoke.sh` — 16 offline
   assertions prove every category detects, sterilizes, and that a clean repo
   passes.
 - **It preserves licenses.** Imported third-party code keeps its LICENSE and
@@ -346,9 +346,8 @@ Gemini CLI…), and there are routing snippets for each.
 
 **Windows?** Yes — the engine is cross-platform and ships PowerShell shims.
 
-**Why clone anonymously instead of forking?** A plain clone is invisible to the
-repo owner; a fork or star is not. Vetting leaves no trace (opt in to star the
-source with `--star`).
+**Does Komainu change the source repository?** No. It fetches read-only over
+HTTPS and works on a local copy — it does not push or modify the source.
 
 More: [docs/faq.md](docs/faq.md)
 

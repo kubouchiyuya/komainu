@@ -7,7 +7,7 @@ through the guardian:
 
     komainu import <https-url>
 
-Komainu clones anonymously, scans for prompt-injection / exfiltration /
+Komainu clones read-only, scans for prompt-injection / exfiltration /
 auto-run / guardrail-tamper, quarantines what is dangerous, and only then
 produces a vetted copy. Deterministic enforcement is also provided by the
 komainu PATH shim; the audited one-time bypass is `KOMAINU_BYPASS=1`.
