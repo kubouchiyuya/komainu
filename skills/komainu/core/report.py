@@ -20,6 +20,7 @@ def to_markdown(payload: dict) -> str:
         "",
         f"- verdict: **{v}**",
         f"- sha: `{payload.get('sha', '')}`",
+        f"- ruleset: `{payload.get('ruleset_version', '')}`",
         f"- counts: crit={c.get('CRITICAL',0)} high={c.get('HIGH',0)} "
         f"med={c.get('MEDIUM',0)} low={c.get('LOW',0)}",
     ]

@@ -33,12 +33,11 @@ routing snippets under `adapters/`.
 Yes — the engine is cross-platform, and `shims/windows/komainu-shim.ps1`
 provides PowerShell function shims. Dot-source it from your `$PROFILE`.
 
-### Why clone anonymously instead of forking? / なぜ fork しない?
+### Does Komainu modify the source repository? / 取得は破壊的ですか?
 
-A public `git clone` is not reported to the repo owner — a fork or star is.
-Komainu clones over HTTPS, drops the `.git` remote, and does not fork/star/push,
-so vetting a repo leaves no trace. (You can opt in to star the source with
-`--star`; the default is to stay anonymous.)
+No. It fetches **read-only over HTTPS** and works on a local copy — it drops the
+`.git` remote and does not push or change the source in any way. Everything
+happens on your machine.
 
 ### What happens to dangerous files — are they deleted? / 危険物は削除される?
 

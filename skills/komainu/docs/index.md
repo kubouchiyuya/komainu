@@ -27,7 +27,7 @@ Komainu closes all three doors.
 ```
 raw `git clone` / install  ──▶  [ 狛犬 Komainu ]  ──▶  vetted, sterilized copy
                                        │
-   anonymous clone · full scan · quarantine danger · verdict gate ·
+   read-only clone · full scan · quarantine danger · verdict gate ·
    sandboxed install · post-install re-verify · optimize for your host
 ```
 

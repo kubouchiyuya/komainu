@@ -13,6 +13,7 @@ from typing import Callable
 from .util import (
     Finding, iter_files, read_text, rel, is_binary_path,
     CAT_INJECTION, CAT_EXEC, CAT_EXFIL, CAT_MALWARE, CAT_SELFDEFENSE,
+    CAT_SUPPLY, CAT_MCP, CAT_PERSIST, CAT_DESTRUCT, CAT_PATHTRAV, CAT_PRIVESC,
     SEV_LOW, SEV_MED, SEV_HIGH, SEV_CRIT, SEV_INFO,
 )
 
@@ -381,6 +382,152 @@ def scan_guardrail_tamper(root: Path) -> list[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# Category 6: supply-chain / dependency risk
+#   (typosquat-prone / dependency-confusion / unpinned / git-source deps;
+#    grounded in npm Shai-Hulud, dependency-confusion research 2025-26)
+# ---------------------------------------------------------------------------
+
+def scan_supply_chain(root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    dep_src = re.compile(r'"[^"]+"\s*:\s*"(git\+|github:|gitlab:|bitbucket:|https?://|file:)', re.IGNORECASE)
+    for path in iter_files(root):
+        n = path.name
+        if n == "package.json":
+            t = read_text(path) or ""
+            r = rel(path, root)
+            for m in dep_src.finditer(t):
+                line = t.count("\n", 0, m.start()) + 1
+                findings.append(Finding(
+                    CAT_SUPPLY, SEV_MED, "dep-untrusted-source",
+                    "dependency pulled from a git/URL/file source, not the registry",
+                    r, line=line, evidence=m.group(0)[:80], action="flag"))
+            # missing lockfile alongside declared deps → unpinned supply chain
+            if re.search(r'"(dependencies|devDependencies)"\s*:\s*\{[^}]*"', t):
+                has_lock = any((path.parent / lk).exists() for lk in
+                               ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml"))
+                if not has_lock:
+                    findings.append(Finding(
+                        CAT_SUPPLY, SEV_LOW, "no-lockfile",
+                        "declares deps without a lockfile — versions are not pinned",
+                        r, action="flag"))
+        elif n == ".npmrc":
+            t = read_text(path) or ""
+            if re.search(r"^\s*(registry|@[^:]+:registry)\s*=", t, re.MULTILINE):
+                findings.append(Finding(
+                    CAT_SUPPLY, SEV_MED, "npmrc-registry-override",
+                    "overrides the package registry — dependency-confusion surface",
+                    rel(path, root), action="flag"))
+        elif n in ("requirements.txt", "Pipfile", "pyproject.toml") or n.endswith(".txt"):
+            t = read_text(path) or ""
+            for m in re.finditer(r"(git\+\S+|--(extra-)?index-url\s+\S+|-e\s+git\+\S+)", t):
+                line = t.count("\n", 0, m.start()) + 1
+                findings.append(Finding(
+                    CAT_SUPPLY, SEV_MED, "pip-untrusted-source",
+                    "pip dependency from a git/alt-index source",
+                    rel(path, root), line=line, evidence=m.group(0)[:80], action="flag"))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Category 7: MCP tool poisoning / rug-pull surface
+#   (OWASP MCP03:2025 — hidden instructions in tool descriptions execute with
+#    host privileges when the agent calls the tool)
+# ---------------------------------------------------------------------------
+
+def scan_mcp_poisoning(root: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for path in iter_files(root):
+        text = read_text(path)
+        if text is None:
+            continue
+        looks_mcp = ('"mcpServers"' in text or '"inputSchema"' in text
+                     or path.name in ("mcp.json", ".mcp.json"))
+        if not looks_mcp:
+            continue
+        r = rel(path, root)
+        # hidden instructions inside a tool "description" field
+        for m in re.finditer(r'"description"\s*:\s*"([^"]{0,4000})"', text, re.IGNORECASE | re.DOTALL):
+            desc = m.group(1)
+            line = text.count("\n", 0, m.start()) + 1
+            if _INJ_RE.search(desc) or _hidden_chars(desc):
+                findings.append(Finding(
+                    CAT_MCP, SEV_CRIT, "mcp-tool-poisoning",
+                    "MCP tool description carries AI-directed instructions / hidden chars "
+                    "(runs with host privileges when the tool is called)",
+                    r, line=line, evidence=desc[:100], action="quarantine"))
+        # MCP server that launches a remote fetch as its command
+        for m in re.finditer(r'"command"\s*:\s*"[^"]*(npx|uvx|curl|wget|bash)', text, re.IGNORECASE):
+            line = text.count("\n", 0, m.start()) + 1
+            findings.append(Finding(
+                CAT_MCP, SEV_HIGH, "mcp-remote-command",
+                "MCP server command fetches/executes remote code on start",
+                r, line=line, evidence=m.group(0)[:80], action="flag"))
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# Category 8: persistence / backdoor / reverse-shell
+# ---------------------------------------------------------------------------
+
+def scan_persistence(root: Path) -> list[Finding]:
+    spec = [
+        (r"(bash|sh|zsh)\s+-i\s*>&?\s*/dev/tcp/", SEV_CRIT, "reverse-shell", "reverse shell to /dev/tcp"),
+        (r"\bnc(at)?\s+[^\n]*-e\b", SEV_CRIT, "netcat-exec", "netcat -e reverse/bind shell"),
+        (r"mkfifo\s+\S+[^\n]*\|\s*(sh|bash|nc)", SEV_CRIT, "fifo-shell", "mkfifo pipe shell"),
+        (r">>\s*~?/?\.ssh/authorized_keys", SEV_CRIT, "authorized-keys", "appends an SSH key (backdoor access)"),
+        (r"\bcrontab\s+|/etc/cron|/var/spool/cron", SEV_HIGH, "cron", "installs a cron job (persistence)"),
+        (r"LaunchAgents|LaunchDaemons|launchctl\s+(load|bootstrap)", SEV_HIGH, "launchd", "installs a macOS LaunchAgent/Daemon (persistence)"),
+        (r"systemctl\s+enable|/etc/systemd/system|\.service\b", SEV_HIGH, "systemd", "installs a systemd unit (persistence)"),
+        (r">>\s*~?/?\.(bash|zsh)rc|>>\s*~?/?\.profile|>>\s*~?/?\.zprofile", SEV_HIGH, "rc-append", "appends to a shell rc (persistence)"),
+    ]
+    return _scan_file_patterns(root, spec, CAT_PERSIST)
+
+
+# ---------------------------------------------------------------------------
+# Category 9: destructive payloads
+# ---------------------------------------------------------------------------
+
+def scan_destructive(root: Path) -> list[Finding]:
+    spec = [
+        (r"\brm\s+-[a-zA-Z]*r[a-zA-Z]*f?[a-zA-Z]*\s+(/|~|\$HOME|/\*|\.\s|\*)", SEV_CRIT, "rm-rf", "recursive force delete of a broad path"),
+        (r":\s*\(\s*\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:", SEV_CRIT, "fork-bomb", "shell fork bomb"),
+        (r"\bdd\s+if=/dev/(zero|u?random)\s+of=/dev/", SEV_CRIT, "disk-wipe", "dd overwrite of a block device"),
+        (r"\bmkfs(\.\w+)?\s+/dev/", SEV_CRIT, "mkfs", "formats a block device"),
+        (r">\s*/dev/sd[a-z]", SEV_CRIT, "device-write", "writes directly to a disk device"),
+        (r"\bfind\s+[^\n]*-delete\b", SEV_HIGH, "mass-delete", "bulk find -delete"),
+        (r"\bchmod\s+-R\s+0{3}\b", SEV_HIGH, "chmod-000", "recursively strips all permissions"),
+    ]
+    return _scan_file_patterns(root, spec, CAT_DESTRUCT)
+
+
+# ---------------------------------------------------------------------------
+# Category 10: path traversal / zip-slip / unsafe archive extraction
+# ---------------------------------------------------------------------------
+
+def scan_path_traversal(root: Path) -> list[Finding]:
+    spec = [
+        (r"\bextractall\s*\(", SEV_HIGH, "zip-slip", "archive extractall without member validation (zip-slip)"),
+        (r"(open|writeFile|fs\.write\w*)\s*\([^)]*\.\./", SEV_HIGH, "traversal-write", "writes to a ../ path (path traversal)"),
+        (r"os\.path\.join\([^)]*\.\.[^)]*\)", SEV_MED, "join-traversal", "path join with .. (traversal risk)"),
+    ]
+    return _scan_file_patterns(root, spec, CAT_PATHTRAV)
+
+
+# ---------------------------------------------------------------------------
+# Category 11: privilege escalation
+# ---------------------------------------------------------------------------
+
+def scan_privesc(root: Path) -> list[Finding]:
+    spec = [
+        (r"\bchmod\s+[ug]?\+s\b|\bchmod\s+[0-7]?[4-7][0-7]{3}\b", SEV_HIGH, "setuid", "sets a setuid/setgid bit"),
+        (r"\bsetuid\s*\(|os\.setuid\s*\(", SEV_HIGH, "setuid-call", "setuid() call"),
+        (r"\bchown\s+root\b|\bchown\s+0:0\b", SEV_MED, "chown-root", "chowns to root"),
+        (r"\bsudo\s+(?!-h|--help)\S", SEV_MED, "sudo", "invokes sudo (privilege escalation surface)"),
+    ]
+    return _scan_file_patterns(root, spec, CAT_PRIVESC)
+
+
+# ---------------------------------------------------------------------------
 # aggregate
 # ---------------------------------------------------------------------------
 
@@ -390,6 +537,12 @@ ALL_SCANNERS = [
     scan_exfil,
     scan_malware,
     scan_guardrail_tamper,
+    scan_supply_chain,
+    scan_mcp_poisoning,
+    scan_persistence,
+    scan_destructive,
+    scan_path_traversal,
+    scan_privesc,
 ]
 
 
