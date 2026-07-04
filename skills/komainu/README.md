@@ -32,7 +32,7 @@ That code can:
 - **rewrite the very rules** that were supposed to protect you.
 
 Komainu is the gate they all have to pass through first. It clones the code
-**read-only**, reads every file looking for those four dangers plus more,
+**read-only**, reads every file looking for those dangers and more,
 **moves anything dangerous into quarantine** (it never deletes), and hands you a
 clean, working copy — or refuses it outright. And it does all this **without ever
 executing a single line** of the code it is inspecting.
@@ -53,7 +53,7 @@ komainu import https://github.com/owner/repo
 
 - [Why this exists (read this even if you're not an engineer)](#why-this-exists)
 - [Why it's suddenly urgent](#why-its-suddenly-urgent)
-- [The 5 dangers it stops](#the-5-dangers-it-stops)
+- [The 11 dangers it stops](#the-11-dangers-it-stops)
 - [How it protects you — simple version](#how-it-protects-you--simple-version)
 - [How it protects you — the full pipeline](#how-it-protects-you--the-full-pipeline)
 - [See it in action](#see-it-in-action)
@@ -111,7 +111,7 @@ standing open. Komainu closes it.
 
 ---
 
-## The 5 dangers it stops
+## The 11 dangers it stops
 
 Each of these is a real technique. Here is what it looks like in plain language,
 and what Komainu does about it.
@@ -166,6 +166,50 @@ Komainu flags dynamic code evaluation, encoded payloads, and opaque binaries
 Komainu specifically watches for any write aimed at guardrail files,
 permission rules, hooks, or its own code. This is **critical → refused.**
 
+### 6. Poisoned dependencies  (supply chain)
+
+> The repo pulls a dependency straight from a git URL, overrides your package
+> registry, or ships no lockfile — the vectors behind the npm "Shai-Hulud"
+> incidents and dependency-confusion attacks.
+
+Komainu flags deps from git/URL/file sources, registry overrides, and missing
+lockfiles, and installs only through the sandboxed, `--ignore-scripts` path.
+
+### 7. A poisoned MCP tool  (tool poisoning / rug-pull)
+
+> An MCP tool's *description* hides an instruction — and it runs with your host's
+> privileges the moment your agent calls the tool (OWASP MCP03).
+
+Komainu inspects MCP configs and flags tool descriptions carrying AI-directed
+instructions or hidden characters, plus servers that fetch remote code on start.
+
+### 8. A backdoor left behind  (persistence)
+
+> A reverse shell to `/dev/tcp`, an SSH key appended to `authorized_keys`, a cron
+> / launchd / systemd job — so the attacker keeps access after the script ends.
+
+Komainu flags reverse shells, `authorized_keys` writes, and cron/launchd/systemd
+and shell-rc persistence.
+
+### 9. A destructive payload
+
+> `rm -rf /`, a fork bomb, a disk wipe with `dd`/`mkfs`. Not theft — sabotage.
+
+Komainu flags broad recursive deletes, fork bombs, and raw block-device writes.
+
+### 10. Escaping the folder  (path traversal / zip-slip)
+
+> An archive that extracts into `../../etc`, or code that writes outside the repo
+> — a file lands where it was never meant to.
+
+Komainu flags `extractall` without validation and writes to `../` paths.
+
+### 11. Grabbing root  (privilege escalation)
+
+> A setuid bit, a `sudo` call, a `chown root` — quietly climbing to admin.
+
+Komainu flags setuid bits, `setuid()`, `chown root`, and `sudo`.
+
 > Full technical taxonomy, severities, and residual-risk analysis:
 > [references/threat-model.md](references/threat-model.md)
 
@@ -214,7 +258,7 @@ Every import runs the same 10 phases. Phases 2–5 touch **no** running code.
 |---|---|
 | **1 · Intercept** | A PATH shim / Claude hook catches a raw clone or install and routes it here. |
 | **2 · Clone** | Read-only HTTPS. `--no-checkout` so `.gitattributes`/`.gitmodules` are inspected *first*; checkout with filters & hooks disabled; drop `.git`; drop junk; pin the exact commit. |
-| **3 · Scan** | All 5 threat categories. |
+| **3 · Scan** | All 11 threat categories. |
 | **4 · Sterilize** | Move dangerous files to `_QUARANTINE/`, strip hidden unicode, report broken references. |
 | **5 · Verdict** | SAFE / REVIEW / DANGER. |
 | **6 · Install** | Dependencies with `--ignore-scripts`, no network, human-gated. |
