@@ -42,6 +42,9 @@ t={"git clone https://x/y":"block","gh repo clone a/b":"block",
    "git clone https://github.com/e/komainu-exploit":"block",     # K2: URL substring must NOT bypass
    "git clone https://x/localhost-repo":"block",                 # K2
    "git clone http://localhost:3000/r":"allow",                  # localhost as host is ok
+   'gh release create --notes "example: git -C x clone"':"allow", # self-shell: quoted trigger ignored
+   'git commit -m "notes on clone/install"':"allow",             # self-shell: quoted trigger ignored
+   "KOMAINU_BYPASS=1 git clone https://x/y":"allow",             # inline audited bypass
    "git status":"allow","npm install":"allow","komainu import https://x":"allow",
    "git commit -m x":"allow"}
 raise SystemExit(0 if all(c(k)==v for k,v in t.items()) else 1)

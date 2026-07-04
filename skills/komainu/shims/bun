@@ -16,7 +16,11 @@ if [ "${KOMAINU_BYPASS:-}" != "1" ]; then
   case "$full" in
     *--komainu-ok*) : ;;   # explicit per-command opt-out (own git uses KOMAINU_BYPASS)
     *)
-      if printf '%s' "$full" | grep -Eiq \
+      # blank quoted contents so a trigger word inside an argument (notes /
+      # commit message / echo) does not false-positive; a real clone keeps its
+      # command outside quotes and is still caught.
+      stripped=$(printf '%s' "$full" | sed -e "s/'[^']*'/''/g" -e 's/"[^"]*"/""/g')
+      if printf '%s' "$stripped" | grep -Eiq \
 'git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+|--git-dir=[^[:space:]]+[[:space:]]+)*clone|gh[[:space:]]+repo[[:space:]]+clone|git[[:space:]]+submodule[[:space:]]+(add|update[[:space:]]+--init)|npx[[:space:]]+degit|[[:space:]]degit[[:space:]]|pip[0-9]?[[:space:]]+install[[:space:]].*(git\+|https?://)|cargo[[:space:]]+install[[:space:]]+--git|go[[:space:]]+install[[:space:]]+[^[:space:]]*@|(curl|wget)[[:space:]][^|]*\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh|python|node|ruby|pwsh)|claude[[:space:]]+plugin[[:space:]]+(install|marketplace[[:space:]]+add)|npm[[:space:]]+install[[:space:]].*(github:|git\+|https?://)'; then
         echo "[komainu] blocked raw acquisition: $full" >&2
         echo "[komainu] route it through the guardian:  komainu import <https-url>" >&2

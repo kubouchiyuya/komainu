@@ -3,6 +3,15 @@
 Ruleset versions track the detection rules (`core/util.py: RULESET_VERSION`) so
 reports and audits are pinnable and new incidents are traceable to a version.
 
+## 0.2.1
+
+- **Self-shell false positives fixed.** The gate now blanks the contents of
+  quoted arguments before matching, so a trigger word inside a release note,
+  commit message, or `echo` no longer blocks the operator's own commands. A real
+  `git clone <url>` keeps its command outside quotes and is still caught.
+- The audited `KOMAINU_BYPASS=1` prefix is now honored through the Claude hook
+  (parsed from the command, not just the environment).
+
 ## 0.2.0 — ruleset 2026.07.03
 
 - **Expanded from 5 to 11 threat categories.** Added, grounded in 2025-26
