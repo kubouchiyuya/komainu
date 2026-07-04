@@ -13,7 +13,9 @@ It *never runs the code it is checking.*
 [![Platforms](https://img.shields.io/badge/mac%20%7C%20linux%20%7C%20windows-black.svg)](#-for-every-ai-every-os)
 [![Agents](https://img.shields.io/badge/Claude%20%7C%20OpenAI%20%7C%20Grok%20%7C%20Gemini%20%7C%20Cursor-black.svg)](#-for-every-ai-every-os)
 
-[日本語](README.ja.md) · [Docs](skills/komainu/docs/index.md) · [Threat model](skills/komainu/references/threat-model.md)
+[日本語](README.ja.md) · [中文](README.zh.md) · [Docs](skills/komainu/docs/index.md) · [Threat model](skills/komainu/references/threat-model.md)
+
+**If Komainu is guarding your installs, a ⭐ helps other builders find it.**
 
 </div>
 
