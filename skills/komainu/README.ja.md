@@ -4,7 +4,7 @@
 
 ### あなたの AI が触れる前に、すべての repo・skill・plugin を門で検める守護獣。
 
-匿名 clone → 徹底スキャン → 危険を無害化 → クリーンなコピーを返す。
+read-only clone → 徹底スキャン → 危険を無害化 → クリーンなコピーを返す。
 **検査対象のコードは、一切実行しない。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
@@ -31,7 +31,7 @@ English: [README.md](README.md)
 - **鍵やファイルを盗んで**静かに外へ送る、
 - あなたを守るはずの**ルールそのものを書き換える**。
 
-狛犬は、それら全部が最初に通らねばならない門です。コードを**匿名 clone** し、
+狛犬は、それら全部が最初に通らねばならない門です。コードを**read-only clone** し、
 全ファイルをこの4つ＋αの危険について読み、**危険物を隔離**（削除はしない）し、
 クリーンで動くコピーを返す — あるいは取り込みを拒否する。しかもこれを、検査対象の
 コードを**1行も実行せずに**行います。
@@ -168,7 +168,7 @@ submodule・npm/pip lifecycle・Claude Code の Pre/PostToolUse hook・
              │                                 │
              ▼                                 │
       ┌──────────────┐                         │
-      │   狛犬 の門   │   1. 匿名 clone         │
+      │   狛犬 の門   │   1. read-only clone         │
       │              │   2. 全ファイル精読     │
       │ (コードは     │   3. 危険物を隔離       │
       │  実行しない)  │   4. 判定               │
@@ -199,8 +199,8 @@ submodule・npm/pip lifecycle・Claude Code の Pre/PostToolUse hook・
 | フェーズ | 内容 |
 |---|---|
 | **1 遮断** | PATH shim / Claude hook が raw clone/install を捕えてここへ回す |
-| **2 clone** | 匿名 HTTPS。`--no-checkout` で `.gitattributes`/`.gitmodules` を*先に*検査、filter/hook 無効で checkout、`.git` 破棄、junk 除外、commit SHA 固定 |
-| **3 scan** | 5カテゴリ全て |
+| **2 clone** | read-only HTTPS。`--no-checkout` で `.gitattributes`/`.gitmodules` を*先に*検査、filter/hook 無効で checkout、`.git` 破棄、junk 除外、commit SHA 固定 |
+| **3 scan** | 11カテゴリ全て |
 | **4 無害化** | 危険物を `_QUARANTINE/` へ移動、隠し unicode 除去、壊れ参照を報告 |
 | **5 判定** | SAFE / REVIEW / DANGER |
 | **6 install** | 依存を `--ignore-scripts`・no-network・人間ゲートで |
@@ -287,7 +287,7 @@ komainu selfcheck                              # 環境確認
 - **削除でなく隔離。** 危険物は控え付きで `_QUARANTINE/` へ。いつでも確認・復元可。
 - **見つけた指示は「データ」として扱い、絶対に従わない** — 注入を読むスキャナ自身が
   注入されてはならない。
-- **完全にオープンで検証可能。** `sh tests/smoke.sh` — オフライン10アサーションが、
+- **完全にオープンで検証可能。** `sh tests/smoke.sh` — オフライン16アサーションが、
   全カテゴリの検出・無害化・クリーン repo の通過を証明。
 - **ライセンス保持。** 取り込んだ第三者コードの LICENSE と帰属を守る。
 
@@ -324,8 +324,8 @@ SAFE / REVIEW / DANGER。
 
 **Windows は?** はい。エンジンはクロスプラットフォームで PowerShell shim を同梱。
 
-**なぜ fork でなく匿名 clone?** 普通の clone は repo オーナーに見えませんが、fork や
-star は見えます。検証は痕跡を残しません（`--star` で支援に転じることも可）。
+**取得は破壊的?** いいえ。read-only で HTTPS 取得し、ローカルコピーで作業します —
+元リポジトリを push/変更しません。
 
 続き: [docs/faq.md](docs/faq.md)
 
