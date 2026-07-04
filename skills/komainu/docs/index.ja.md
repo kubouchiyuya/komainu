@@ -25,7 +25,7 @@
 ```
 raw `git clone` / install  ──▶  [ 狛犬 Komainu ]  ──▶  検証済み・無害化コピー
                                        │
-   匿名clone · 完全スキャン · 危険物隔離 · 判定ゲート ·
+   read-only clone · 完全スキャン · 危険物隔離 · 判定ゲート ·
    サンドボックスinstall · 組込後再検証 · ホスト最適化
 ```
 

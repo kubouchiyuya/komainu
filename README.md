@@ -26,7 +26,7 @@ file turns your helpful agent into someone else's tool, and you may never find
 out.
 
 **狛犬 is the missing permission gate.** Named after the shrine lion-dogs that
-turn evil away at the gate — it clones anonymously, reads every file for the
+turn evil away at the gate — it clones read-only, reads every file for the
 ways third-party code attacks an *agent*, quarantines what's dangerous (never
 deletes), and hands back a clean copy — or refuses it. **Nothing is ever
 executed to do this.**
@@ -40,10 +40,10 @@ komainu import https://github.com/owner/repo
 
 ## ✨ Key capabilities
 
-- **Reads code the way an attacker weaponizes it** — 5 categories: hidden AI
-  instructions (prompt injection), auto-run traps, secret exfiltration, disguised
-  malware, and the AI-era killer move: **rewriting your guardrails to disable the
-  guard itself.**
+- **Reads code the way an attacker weaponizes it** — **11 categories**: prompt
+  injection, auto-run traps, secret exfiltration, disguised malware, guardrail
+  tampering, supply-chain/dependency risk, MCP tool poisoning, persistence &
+  reverse shells, destructive payloads, path traversal, and privilege escalation.
 - **Never executes what it inspects.** Read-only static analysis. A trap that
   never springs can't hurt you — that's the whole guarantee.
 - **Quarantines, never deletes.** Everything dangerous is moved to
@@ -74,13 +74,13 @@ Then vet anything:
 komainu import https://github.com/owner/repo   # clone → scan → sterilize → report
 komainu scan ./local/dir                       # vet something you already have
 komainu selfcheck                              # check your environment
-sh skills/komainu/tests/smoke.sh               # 10 offline assertions
+sh skills/komainu/tests/smoke.sh               # 16 offline assertions
 ```
 
 > **Tip:** the star on this repo does *not* install anything — a star can't reach
 > your machine. The one install command does the real work; your AI can run both.
 
-## 🚪 The 5 dangers it stops
+## 🚪 The dangers it stops — 11 categories
 
 | Danger | In plain words | Komainu |
 |---|---|---|
@@ -89,12 +89,18 @@ sh skills/komainu/tests/smoke.sh               # 10 offline assertions
 | 📤 **Exfiltration** | reads `~/.ssh`/`.env` and `curl`s it out | flags secret-read + network, `curl \| sh`, outbound POST — quarantine on sight |
 | 🧬 **Disguised malware** | base64 blobs, opaque binaries | flags dynamic code eval, encoded payloads, opaque binaries, committed secrets |
 | 🔓 **Guardrail tampering** | rewrites your `settings.json`/`CLAUDE.md`/hooks to switch off the guard | watched specifically → **refused** |
+| 📦 **Supply chain** | deps from git/URLs, registry overrides, no lockfile | flags dependency-confusion & unpinned supply chains (npm Shai-Hulud era) |
+| 🧩 **MCP tool poisoning** | hidden orders inside an MCP tool's description | OWASP MCP03 — flags poisoned descriptions + remote-fetch server commands |
+| 🕳️ **Persistence / backdoor** | reverse shell, cron job, an added SSH key | flags `/dev/tcp`, `nc -e`, `authorized_keys`, cron/launchd/systemd |
+| 💥 **Destructive** | `rm -rf /`, fork bomb, disk wipe | flags broad deletes, fork bombs, `dd`/`mkfs` |
+| 🧨 **Path traversal** | zip-slip, writes outside the repo | flags `extractall`, `../` writes |
+| ⬆️ **Privilege escalation** | setuid, `sudo`, `chown root` | flags setuid bits, `sudo`, root ownership |
 
 Full taxonomy & residual-risk analysis → [threat-model.md](skills/komainu/references/threat-model.md).
 
 ## 🧭 How it works
 
-10 phases; phases 2–5 touch **no** running code. Intercept → minimal anonymous
+10 phases; phases 2–5 touch **no** running code. Intercept → minimal read-only
 clone (SHA-pinned, `.git` dropped, filters/hooks off) → scan → sterilize →
 verdict → sandboxed install (`--ignore-scripts`, no-net) → re-verify → optimize
 → activate → audit. Deep dive → [how-it-works](skills/komainu/docs/how-it-works.md).
@@ -103,7 +109,7 @@ verdict → sandboxed install (`--ignore-scripts`, no-net) → re-verify → opt
 
 | Command | Purpose |
 |---|---|
-| `sh skills/komainu/tests/smoke.sh` | 10 offline assertions: every category detects, sterilizes, clean repo passes, shim blocks |
+| `sh skills/komainu/tests/smoke.sh` | 16 offline assertions: every category detects, sterilizes, clean repo passes, shim blocks |
 | GitHub Actions (`ci.yml`) | runs the smoke suite on every push — the badge above is the proof |
 
 ## 🌐 For every AI, every OS

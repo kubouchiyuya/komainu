@@ -35,6 +35,16 @@ CAT_EXEC = "exec_vector"             # auto-run on clone/install/open
 CAT_EXFIL = "exfil"                  # outbound data flow
 CAT_MALWARE = "malware_obfuscation"  # virus-like / obfuscation / secrets
 CAT_SELFDEFENSE = "guardrail_tamper" # edits to guardrails / komainu itself
+CAT_SUPPLY = "supply_chain"          # typosquat / dep-confusion / unpinned / git-source deps
+CAT_MCP = "mcp_poisoning"            # MCP tool-description poisoning / rug-pull surface
+CAT_PERSIST = "persistence"          # cron / launchd / systemd / rc / reverse-shell / C2
+CAT_DESTRUCT = "destructive"         # rm -rf / fork bomb / disk wipe / mass-encrypt
+CAT_PATHTRAV = "path_traversal"      # ../ writes / zip-slip / unsafe extractall
+CAT_PRIVESC = "priv_escalation"      # sudo abuse / setuid / chmod +s
+
+# Detection ruleset version — bump when rules change so reports/audits are pinnable
+# and new virus/security incidents can be tracked to a version.
+RULESET_VERSION = "2026.07.03"
 
 
 @dataclass

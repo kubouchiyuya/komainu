@@ -89,6 +89,77 @@ reject は DANGER 直行で import を止める。
 
 ---
 
+## カテゴリ6: サプライチェーン / 依存リスク
+
+2025-26 の主戦場（npm Shai-Hulud は 500+ パッケージ感染、pre-install 実行化で影響拡大 / dependency-confusion / typosquat）。
+
+| 脅威 | 検出 (`scan_supply_chain`) |
+|---|---|
+| git/URL/file 由来の依存 | `package.json` の dep 値が `git+`/`github:`/`http`/`file:` → flag |
+| registry 上書き（dependency-confusion） | `.npmrc` の `registry=` / scoped registry → flag |
+| lockfile 不在（版未固定） | deps 宣言ありで lock 無し → flag |
+| pip の git/alt-index 依存 | `git+` / `--index-url` / `-e git+` → flag |
+
+**残余リスク**: transitive（install 時に外部から引く）依存は clone 時点で repo に無い → lifecycle 非実行＋`--ignore-scripts` で受ける。
+
+## カテゴリ7: MCP tool poisoning / rug-pull
+
+OWASP **MCP03:2025**。tool description に隠した指示が、agent が tool を呼んだ瞬間に host 権限で実行される。承認後に定義が差し替わる rug-pull も。
+
+| 脅威 | 検出 (`scan_mcp_poisoning`) |
+|---|---|
+| tool description への注入 | MCP config(`mcpServers`/`inputSchema`) の `description` に注入文/隠しunicode → CRIT 隔離 |
+| remote-fetch サーバ | `command` が `npx`/`uvx`/`curl` 等で起動時に外部取得 → flag |
+
+**残余リスク**: 定義の可変性（rug-pull）は静的には追えない → SHA ピン＋再検証(P7)で受ける。
+
+## カテゴリ8: 永続化 / バックドア / 逆シェル
+
+| 脅威 | 検出 (`scan_persistence`) |
+|---|---|
+| 逆シェル | `bash -i >& /dev/tcp/`・`nc -e`・`mkfifo\|sh` → CRIT |
+| SSH backdoor | `>> ~/.ssh/authorized_keys` → CRIT |
+| 常駐 | crontab / LaunchAgents / systemd / shell-rc への追記 → HIGH |
+
+## カテゴリ9: 破壊的ペイロード
+
+| 脅威 | 検出 (`scan_destructive`) |
+|---|---|
+| 広域削除 | `rm -rf /` `~` `$HOME` `/*` → CRIT |
+| fork bomb | `:(){ :\|:& };:` → CRIT |
+| ディスク破壊 | `dd if=/dev/zero of=/dev/…`・`mkfs /dev/…`・`> /dev/sd*` → CRIT |
+| 一括削除 | `find … -delete`・`chmod -R 000` → HIGH |
+
+## カテゴリ10: パストラバーサル / zip-slip
+
+| 脅威 | 検出 (`scan_path_traversal`) |
+|---|---|
+| zip-slip | `extractall(` の member 未検証 → HIGH |
+| `../` 書込 | `open/writeFile(… ../ … 'w')` → HIGH |
+
+## カテゴリ11: 権限昇格
+
+| 脅威 | 検出 (`scan_privesc`) |
+|---|---|
+| setuid | `chmod +s` / setuid ビット / `setuid()` → HIGH |
+| root 化 | `chown root` → MED |
+| sudo | `sudo …` → MED（install script で頻出のため中） |
+
+---
+
+## バージョン管理と新事案への更新
+
+- 検出ルールは `core/util.py` の `RULESET_VERSION`（日付版）で一元管理。全レポートに版を刻む（監査・再現・「いつの脅威まで見たか」の証跡）。
+- 新事案が出たら: `core/scan.py` に規則追加 → `fixtures/evil_repo/` に再現 fixture → `tests/smoke.sh` にアサーション → `RULESET_VERSION` を上げ、`CHANGELOG.md` に記録。
+- スキャンは既知パターン中心なので、この更新ループが「新種ウイルス/事案への追随」を担う。
+
+## 出典（2025-26）
+
+- MCP tool poisoning / rug-pull（OWASP MCP03）: mcpmanager.ai/blog/tool-poisoning, glasp.co/articles/mcp-security-tool-poisoning-supply-chain, checkmarx.com（11 emerging AI/MCP risks）
+- npm サプライチェーン（Shai-Hulud, dependency-confusion）: unit42.paloaltonetworks.com（npm threat landscape）, sonatype（state of the software supply chain 2026）
+
+---
+
 ## 全体の設計原則（なぜ「ほぼ防げる」と言えるか）
 
 1. **不実行** — Komainu は取り込んだコードを一切実行しない。スキャン漏れがあっても

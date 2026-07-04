@@ -20,7 +20,7 @@ from .scan import scan_all
 from .sterilize import sterilize
 from .verdict import decide, one_line, DANGER, REVIEW, SAFE
 from .report import write_reports
-from .util import platform_info
+from .util import platform_info, RULESET_VERSION
 
 
 def vet_path(root: Path, do_sterilize: bool = True, source: str = "") -> dict:
@@ -31,6 +31,7 @@ def vet_path(root: Path, do_sterilize: bool = True, source: str = "") -> dict:
         "source": source or str(root),
         "root": str(root),
         "platform": platform_info(),
+        "ruleset_version": RULESET_VERSION,
         "findings": [f.to_dict() for f in findings],
         "verdict": verdict,
         "summary": summary,

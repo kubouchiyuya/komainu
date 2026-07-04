@@ -16,11 +16,12 @@ QN="$(echo "$OUT" | python3 -c 'import json,sys;d=json.load(sys.stdin);print((d.
 [ "$INIT_VERDICT" = "DANGER" ] && ok "initial verdict DANGER" || no "initial verdict was $INIT_VERDICT"
 [ "$QN" -ge 4 ] && ok "quarantined $QN files" || no "quarantined only $QN"
 
-echo "[2] all 5 threat categories fire (isolated re-scan of pristine copy)"
+echo "[2] all 11 threat categories fire (isolated re-scan of pristine copy)"
 TMP2="$(mktemp -d)/evil2"; cp -R "$SKILL/fixtures/evil_repo" "$TMP2"
 CATS="$(python3 "$SKILL/bin/komainu" scan "$TMP2" --no-sterilize --json 2>/dev/null \
   | python3 -c 'import json,sys;print(",".join(sorted({f["category"] for f in json.load(sys.stdin)["findings"]})))')"
-for c in injection exec_vector exfil malware_obfuscation guardrail_tamper; do
+for c in injection exec_vector exfil malware_obfuscation guardrail_tamper \
+         supply_chain mcp_poisoning persistence destructive path_traversal priv_escalation; do
   case ",$CATS," in *",$c,"*) ok "category $c";; *) no "category $c missing (got: $CATS)";; esac
 done
 
