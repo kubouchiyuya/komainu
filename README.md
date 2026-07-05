@@ -133,12 +133,6 @@ everywhere — only the enforcement layer differs.
 - If a repo's whole purpose is malicious, cleaning it removes the feature, so
   Komainu refuses (DANGER) rather than ship a hollow copy.
 
-## 🔗 Related projects
-
-- 🧭 **[羅針盤 / Rashinban](https://github.com/kubouchiyuya/rashinban)** — a compass
-  for autonomous agent goals: turn a rough request into a linted, verifiable
-  `/goal`. Komainu guards what comes *in*; Rashinban aims where you're *going*.
-
 ## 🤝 Contributing & security
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
