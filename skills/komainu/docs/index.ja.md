@@ -25,8 +25,8 @@
 ```
 raw `git clone` / install  ──▶  [ 狛犬 Komainu ]  ──▶  検証済み・無害化コピー
                                        │
-   read-only clone · 完全スキャン · 危険物隔離 · 判定ゲート ·
-   サンドボックスinstall · 組込後再検証 · ホスト最適化
+   read-only clone · 11カテゴリスキャン · 危険物隔離 · 判定ゲート
+   install 計画は返すだけで実行しない · 再検証は別呼び出し
 ```
 
 狛犬は取り込んだコードを**一切実行しない**。静的に読み、危険物は**削除せず隔離**し、
@@ -37,7 +37,7 @@ raw `git clone` / install  ──▶  [ 狛犬 Komainu ]  ──▶  検証済�
 | Doc | 目的 |
 |---|---|
 | [quickstart.md](quickstart.md) | 導入して最初の検証付き import を2分で |
-| [how-it-works.md](how-it-works.md) | 10フェーズ・5カテゴリ・強制層の仕組み |
+| [how-it-works.md](how-it-works.md) | ライフサイクル・11カテゴリ・強制層・`import` が実際に行うこと |
 | [faq.md](faq.md) | star≠install / SAFE≠実行安全 / bypass / 全AI・全OS |
 | [../references/threat-model.md](../references/threat-model.md) | 脅威分類と残余リスクの完全版 |
 

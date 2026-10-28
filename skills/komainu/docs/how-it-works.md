@@ -2,21 +2,22 @@
 
 ## The 10-phase lifecycle
 
-Every import runs the same pipeline. Phases P2–P5 touch **no** running code;
-execution only ever happens in the sandboxed, human-gated install (P6).
+`komainu import` runs P2–P5, then attaches a P6 install plan and a P8 report.
+It does not execute inspected code at any phase. P7 and P10 in the table are
+the intended lifecycle; the import path does not call them yet.
 
 | Phase | What happens | Runs code? |
 |---|---|---|
 | **P1 Intercept** | PATH shim / Claude hook catches a raw clone/install and routes it here | no |
 | **P2 Clone** | read-only HTTPS, `--no-checkout` → inspect `.gitattributes`/`.gitmodules` *first* → checkout with filters & hooks disabled → drop `.git` → drop junk → pin the commit SHA | no |
-| **P3 Scan** | all 5 threat categories (below) | no |
+| **P3 Scan** | all 11 threat categories (below) | no |
 | **P4 Sterilize** | move dangerous files to `_QUARANTINE/`, strip hidden unicode, report broken references | no |
 | **P5 Verdict** | SAFE / REVIEW / DANGER gate | no |
-| **P6 Install** | dependencies with `--ignore-scripts`, no network, human-gated | sandboxed |
-| **P7 Re-verify** | re-scan the embedded copy *in place* after it lands | verify |
-| **P8 Optimize** | rewrite absolute paths, prune footprint, detect host agent, generate integration | verify |
-| **P9 Activate** | register the skill/plugin, generate usage | — |
-| **P10 Audit** | record SAFE@SHA, remember known-bad hashes | — |
+| **P6 Install** | returns an install plan (`--ignore-scripts`). `import` does not run it | no |
+| **P7 Re-verify** | `reverify()` exists. `import` does not call it | not on import path |
+| **P8 Optimize** | reports absolute paths and detected host agents. Does not rewrite files | no |
+| **P9 Activate** | sets `allowed` only when the verdict is SAFE. Does not register anything | no |
+| **P10 Audit** | writes `komainu-report.md` / `.json`. Does not store known-bad hashes | no |
 
 ## The 11 threat categories
 
@@ -88,8 +89,8 @@ past any scanner. Komainu's real containment is structural:
 1. **It never executes imported code.** A missed pattern that never runs does no
    harm.
 2. **It disarms auto-run at clone time** (P2) — git hooks off, no submodule
-   recursion, LFS/filters off, and it never runs install/lifecycle scripts
-   (those only ever run sandboxed in P6 with `--ignore-scripts`).
+   recursion, LFS/filters off. Install commands are returned as a plan;
+   Komainu does not run them.
 3. **It quarantines, not deletes** — recoverable, auditable.
 
 So the near-zero-damage guarantee comes from (1)(2)(3); the scanners are the
@@ -104,3 +105,7 @@ early-warning signal on top.
   are out of scope and rely on discipline.
 - If a repo's *primary purpose* is malicious, removing the malice removes the
   feature — Komainu **refuses** the import (DANGER) rather than pretend-clean it.
+- `selfcheck` reports git, optional `rg`, platform, and the staging path. It
+  does not audit host secrets, guardrail files, or whether the shim is on `PATH`.
+- A later copy of the tree is not re-scanned unless something calls
+  `reverify()`. Known-bad hashes are not stored.

@@ -67,7 +67,7 @@ echo 'export PATH="$HOME/.komainu/bin:$PATH"' >> ~/.zshrc
 ```bash
 komainu import https://github.com/owner/repo   # clone → scan → 無害化 → レポート
 komainu scan ./local/dir                       # 手元の物を検査
-sh skills/komainu/tests/smoke.sh               # オフライン16アサーション
+sh skills/komainu/tests/smoke.sh               # オフライン17アサーション
 ```
 
 > **Tip:** star してもインストールされません（star は PC に届かない）。実際の導入は
@@ -93,15 +93,15 @@ sh skills/komainu/tests/smoke.sh               # オフライン16アサーシ�
 
 ## 🧭 仕組み
 
-10フェーズ・フェーズ2〜5は**一切コードを走らせない**。遮断→最小 read-only clone（SHA固定・
-`.git`破棄・filter/hook無効）→scan→無害化→判定→sandbox install→再検証→最適化→
-活性化→監査。詳細 → [how-it-works](skills/komainu/docs/how-it-works.md)
+`import` が行うのは門まで。read-only clone（SHA固定・`.git`破棄・filter/hook無効）
+→scan（11カテゴリ）→無害化→判定、その後に実行しない install 計画を付ける。
+再検証と既知 bad の記憶はこの経路に無い。詳細 → [how-it-works](skills/komainu/docs/how-it-works.md)
 
 ## 🧪 テスト / CI
 
 | コマンド | 目的 |
 |---|---|
-| `sh skills/komainu/tests/smoke.sh` | 10 アサーション（検出・無害化・クリーン通過・shim 遮断） |
+| `sh skills/komainu/tests/smoke.sh` | 17アサーション（検出・無害化・クリーン通過・shim 遮断・スキャナ障害は SAFE にしない） |
 | GitHub Actions (`ci.yml`) | push ごとに smoke 実行 — 上のバッジが証拠 |
 
 ## 🌐 全AI・全OS

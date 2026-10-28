@@ -3,6 +3,15 @@
 Ruleset versions track the detection rules (`core/util.py: RULESET_VERSION`) so
 reports and audits are pinnable and new incidents are traceable to a version.
 
+## 0.2.2
+
+- Public contract matches the engine. Coverage is 11 categories. `import` runs
+  P2–P5, returns a P6 plan and a P8 report, and does not run P7 re-verify or
+  P10 known-bad memory.
+- A scanner exception is HIGH, so the verdict is REVIEW instead of SAFE.
+- Dependabot watches GitHub Actions only. CI's token is `contents: read`.
+- Smoke suite: 17 offline assertions.
+
 ## 0.2.1
 
 - **Self-shell false positives fixed.** The gate now blanks the contents of
