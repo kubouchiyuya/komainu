@@ -32,3 +32,20 @@ are prioritized, and you'll be credited unless you prefer otherwise.
 
 Komainu is pre-1.0; the latest `main` is the supported version. Pin a tag if you
 need reproducibility.
+
+## Scope of this policy
+
+This file covers the intake gate: false negatives, shim or hook bypasses,
+any path that executes inspected code, and guardrail tampering the scanner
+misses. Private reporting has to be switched on in the repository settings
+(Code security → Private vulnerability reporting). This file does not enable it.
+
+Komainu does not certify runtime behavior after a human runs imported code,
+and `selfcheck` does not audit host secrets, guardrail files, or whether the
+shim is on `PATH`. Those are outside this repository.
+
+## Dependency updates
+
+The engine has no third-party Python packages. Dependabot
+(`.github/dependabot.yml`) watches GitHub Actions only. CI's `GITHUB_TOKEN`
+is limited to `contents: read`.

@@ -76,7 +76,7 @@ Then vet anything:
 komainu import https://github.com/owner/repo   # clone → scan → sterilize → report
 komainu scan ./local/dir                       # vet something you already have
 komainu selfcheck                              # check your environment
-sh skills/komainu/tests/smoke.sh               # 16 offline assertions
+sh skills/komainu/tests/smoke.sh               # 17 offline assertions
 ```
 
 > **Tip:** the star on this repo does *not* install anything — a star can't reach
@@ -102,16 +102,16 @@ Full taxonomy & residual-risk analysis → [threat-model.md](skills/komainu/refe
 
 ## 🧭 How it works
 
-10 phases; phases 2–5 touch **no** running code. Intercept → minimal read-only
-clone (SHA-pinned, `.git` dropped, filters/hooks off) → scan → sterilize →
-verdict → sandboxed install (`--ignore-scripts`, no-net) → re-verify → optimize
-→ activate → audit. Deep dive → [how-it-works](skills/komainu/docs/how-it-works.md).
+`import` runs the gate: read-only clone (SHA-pinned, `.git` dropped, filters
+and hooks off) → scan (11 categories) → sterilize → verdict, then attaches an
+install plan it does not run. Re-verify and known-bad memory are not on that
+path. Deep dive → [how-it-works](skills/komainu/docs/how-it-works.md).
 
 ## 🧪 Testing / CI
 
 | Command | Purpose |
 |---|---|
-| `sh skills/komainu/tests/smoke.sh` | 16 offline assertions: every category detects, sterilizes, clean repo passes, shim blocks |
+| `sh skills/komainu/tests/smoke.sh` | 17 offline assertions: every category detects, sterilizes, clean repo passes, shim blocks, a crashed scanner cannot mint SAFE |
 | GitHub Actions (`ci.yml`) | runs the smoke suite on every push — the badge above is the proof |
 
 ## 🌐 For every AI, every OS
