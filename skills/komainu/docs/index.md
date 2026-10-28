@@ -27,8 +27,8 @@ Komainu closes all three doors.
 ```
 raw `git clone` / install  ──▶  [ 狛犬 Komainu ]  ──▶  vetted, sterilized copy
                                        │
-   read-only clone · full scan · quarantine danger · verdict gate ·
-   sandboxed install · post-install re-verify · optimize for your host
+   read-only clone · 11-category scan · quarantine · verdict gate
+   install plan is returned and not run · re-verify is a separate call
 ```
 
 Komainu **never executes** the code it imports. It reads it statically,
@@ -40,7 +40,7 @@ structurally-intact copy — or refuses the import outright.
 | Doc | For |
 |---|---|
 | [quickstart.md](quickstart.md) | install it and run your first vetted import in 2 minutes |
-| [how-it-works.md](how-it-works.md) | the 10-phase lifecycle, 5 threat categories, enforcement layers |
+| [how-it-works.md](how-it-works.md) | the lifecycle, 11 threat categories, enforcement layers, and what `import` actually runs |
 | [faq.md](faq.md) | star≠install, "SAFE" ≠ safe-to-run, bypass, all-AIs/all-OSes |
 | [../references/threat-model.md](../references/threat-model.md) | the full threat taxonomy and residual-risk analysis |
 

@@ -9,7 +9,7 @@
     {
       "name": "komainu",
       "source": "./",
-      "description": "Anonymous clone → scan → sterilize → verdict → sandboxed install. Auto-fires via PATH shim + PreToolUse hook across all AIs and OSes."
+      "description": "Anonymous clone → scan → sterilize → verdict, plus an install plan that is not auto-run. Auto-fires via PATH shim + PreToolUse hook across all AIs and OSes."
     }
   ]
 }

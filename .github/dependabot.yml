@@ -1,0 +1,9 @@
+# The engine is Python stdlib only. There is no pip or npm lockfile to update.
+# The third-party supply chain of this repository is GitHub Actions.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3

@@ -252,7 +252,8 @@ before: the scanners are the early warning, but **"nothing runs" is the wall.**
 
 ## How it protects you — the full pipeline
 
-Every import runs the same 10 phases. Phases 2–5 touch **no** running code.
+`import` runs phases 2–5 and does not execute inspected code. Phases 6 and 8
+below are a plan and a report. Phases 7, 9, and 10 are not invoked on that path.
 
 | Phase | What happens |
 |---|---|
@@ -261,11 +262,11 @@ Every import runs the same 10 phases. Phases 2–5 touch **no** running code.
 | **3 · Scan** | All 11 threat categories. |
 | **4 · Sterilize** | Move dangerous files to `_QUARANTINE/`, strip hidden unicode, report broken references. |
 | **5 · Verdict** | SAFE / REVIEW / DANGER. |
-| **6 · Install** | Dependencies with `--ignore-scripts`, no network, human-gated. |
-| **7 · Re-verify** | Re-scan the embedded copy *in place* after it lands. |
-| **8 · Optimize** | Fix absolute paths, trim footprint, detect the host agent, generate integration. |
-| **9 · Activate** | Register the skill/plugin, generate usage. |
-| **10 · Audit** | Record SAFE@commit, remember known-bad hashes. |
+| **6 · Install** | Returns an install plan (`--ignore-scripts`). Nothing is executed. |
+| **7 · Re-verify** | `reverify()` exists. `import` does not call it. |
+| **8 · Optimize** | Reports absolute paths and detected host agents. Does not rewrite files. |
+| **9 · Activate** | Sets `allowed` only when the verdict is SAFE. Does not register anything. |
+| **10 · Audit** | Writes the report files. Does not store known-bad hashes. |
 
 > Deeper walkthrough, verdict handling, quarantine restore, and environment
 > variables: [docs/how-it-works.md](docs/how-it-works.md)
@@ -349,7 +350,7 @@ differs, never the judgment.
   `_QUARANTINE/` with a manifest. You can always inspect or restore.
 - **It treats found instructions as data, never follows them** — a scanner that
   reads injection attempts must not be injectable itself.
-- **It is fully open and testable.** Run `sh tests/smoke.sh` — 16 offline
+- **It is fully open and testable.** Run `sh tests/smoke.sh` — 17 offline
   assertions prove every category detects, sterilizes, and that a clean repo
   passes.
 - **It preserves licenses.** Imported third-party code keeps its LICENSE and

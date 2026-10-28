@@ -3,9 +3,9 @@
 P1 intercept happens at the shim/hook layer (outside this process). This engine
 runs P2..P10 for a given URL or a local path:
 
-  P2 clone (minimal/anonymous)  -> P3 scan (5 categories) -> P4 sterilize
-  -> P5 verdict gate -> [P6 install plan] -> [P7 re-verify] -> [P8 optimize]
-  -> P9 activation notes -> P10 report/audit
+  P2 clone (minimal/anonymous)  -> P3 scan (11 categories) -> P4 sterilize
+  -> P5 verdict gate -> P6 install plan (not executed) -> P8 optimize report
+  P7 re-verify and P10 known-bad memory are not called on this path.
 
 Nothing in this module executes cloned repo content.
 """

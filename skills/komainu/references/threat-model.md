@@ -111,7 +111,7 @@ OWASP **MCP03:2025**。tool description に隠した指示が、agent が tool �
 | tool description への注入 | MCP config(`mcpServers`/`inputSchema`) の `description` に注入文/隠しunicode → CRIT 隔離 |
 | remote-fetch サーバ | `command` が `npx`/`uvx`/`curl` 等で起動時に外部取得 → flag |
 
-**残余リスク**: 定義の可変性（rug-pull）は静的には追えない → SHA ピン＋再検証(P7)で受ける。
+**残余リスク**: 定義の可変性（rug-pull）は静的には追えない。SHA ピンと `reverify()` が受け口だが、`import` は `reverify()` を呼ばない。組込前に明示的に通すまで、この残余は開いたまま。
 
 ## カテゴリ8: 永続化 / バックドア / 逆シェル
 
