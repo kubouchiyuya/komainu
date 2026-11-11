@@ -1,6 +1,6 @@
 #!/bin/sh
 # Komainu smoke test — deterministic, offline, no network.
-# Asserts: evil fixture -> DANGER + all 5 categories detected + quarantine;
+# Asserts: evil fixture -> DANGER + all 11 categories detected + quarantine;
 #          clean fixture -> SAFE; gate classifier; shim block path.
 set -u
 SKILL="$(cd "$(dirname "$0")/.." && pwd)"
@@ -54,6 +54,29 @@ echo "[5] shim blocks raw clone"
 OUT5="$(KOMAINU_AUDIT=/tmp/komainu-smoke.log "$SKILL/shims/git" clone https://github.com/x/y.git 2>&1)"
 rc=$?
 [ "$rc" = "97" ] && ok "shim exit 97 (block)" || no "shim exit $rc"
+
+echo "[6] a crashed scanner cannot mint SAFE"
+python3 - "$SKILL" <<'PY' && ok "scanner crash -> REVIEW" || no "scanner crash still SAFE"
+import sys, tempfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import core.scan as scan
+from core.verdict import decide
+
+def boom(root):
+    raise RuntimeError("boom")
+
+orig = list(scan.ALL_SCANNERS)
+scan.ALL_SCANNERS[:] = [boom]
+try:
+    findings = scan.scan_all(Path(tempfile.mkdtemp()))
+    verdict, _ = decide(findings)
+finally:
+    scan.ALL_SCANNERS[:] = orig
+ok = verdict == "REVIEW" and any(
+    f.rule == "scanner-error" and f.severity == "HIGH" for f in findings)
+raise SystemExit(0 if ok else 1)
+PY
 
 echo ""
 echo "RESULT: pass=$pass fail=$fail"

@@ -72,7 +72,7 @@ echo 'export PATH="$HOME/.komainu/bin:$PATH"' >> ~/.zshrc
 komainu import https://github.com/owner/repo   # clone → 扫描 → 无害化 → 报告
 komainu scan ./local/dir                       # 检查你手头已有的代码
 komainu selfcheck                              # 检查你的运行环境
-sh skills/komainu/tests/smoke.sh               # 16 条离线断言
+sh skills/komainu/tests/smoke.sh               # 17 条离线断言
 ```
 
 > **提示：** 给这个仓库点 star **不会**安装任何东西 —— star 本身到达不了你的机器。
@@ -98,16 +98,15 @@ sh skills/komainu/tests/smoke.sh               # 16 条离线断言
 
 ## 🧭 工作原理
 
-共 10 个阶段，第 2–5 阶段**不会**触碰任何正在运行的代码。拦截 → 最小化只读
-clone（锁定 SHA、丢弃 `.git`、关闭 filter/hook）→ 扫描 → 无害化 → 判定 →
-沙箱安装（`--ignore-scripts`、无网络）→ 再验证 → 优化 → 激活 → 审计。深入了解 →
-[how-it-works](skills/komainu/docs/how-it-works.md)。
+`import` 只走到门这一步：只读 clone（锁定 SHA、丢弃 `.git`、关闭 filter/hook）
+→ 扫描（11 类）→ 无害化 → 判定，然后附上一份不会执行的安装计划。再验证和已知
+恶意哈希不在这条路径上。深入了解 → [how-it-works](skills/komainu/docs/how-it-works.md)。
 
 ## 🧪 测试 / CI
 
 | 命令 | 用途 |
 |---|---|
-| `sh skills/komainu/tests/smoke.sh` | 16 条离线断言：每个类别都能检测、无害化、干净 repo 能通过、shim 能拦截 |
+| `sh skills/komainu/tests/smoke.sh` | 17 条离线断言：每个类别都能检测、无害化、干净 repo 能通过、shim 能拦截、扫描器崩溃不会给出 SAFE |
 | GitHub Actions (`ci.yml`) | 每次 push 都会运行 smoke 套件 —— 上方的徽章就是证明 |
 
 ## 🌐 适配所有 AI，所有系统

@@ -1,4 +1,4 @@
-"""Komainu scanners — the 5 threat categories (stdlib only).
+"""Komainu scanners — the 11 threat categories (stdlib only).
 
 Each scanner takes the cloned repo root and returns list[Finding].
 Nothing here executes repo content; everything is read-only static analysis.
@@ -14,7 +14,7 @@ from .util import (
     Finding, iter_files, read_text, rel, is_binary_path,
     CAT_INJECTION, CAT_EXEC, CAT_EXFIL, CAT_MALWARE, CAT_SELFDEFENSE,
     CAT_SUPPLY, CAT_MCP, CAT_PERSIST, CAT_DESTRUCT, CAT_PATHTRAV, CAT_PRIVESC,
-    SEV_LOW, SEV_MED, SEV_HIGH, SEV_CRIT, SEV_INFO,
+    SEV_LOW, SEV_MED, SEV_HIGH, SEV_CRIT,
 )
 
 # ---------------------------------------------------------------------------
@@ -551,8 +551,11 @@ def scan_all(root: Path) -> list[Finding]:
     for fn in ALL_SCANNERS:
         try:
             findings += fn(root)
-        except Exception as e:  # a broken scanner must not blind the others
+        except Exception:  # a broken scanner must not blind the others
+            # HIGH → REVIEW. INFO would let a crashed scanner still mint SAFE.
+            # The exception text is omitted so scanned file contents stay out of the report.
             findings.append(Finding(
-                "engine", SEV_INFO, "scanner-error",
-                f"{fn.__name__} raised {type(e).__name__}: {e}", action="flag"))
+                "engine", SEV_HIGH, "scanner-error",
+                f"{fn.__name__} failed; scan is incomplete",
+                action="flag"))
     return findings
